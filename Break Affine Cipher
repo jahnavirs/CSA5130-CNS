@@ -1,0 +1,45 @@
+from math import gcd
+
+def mod_inverse(a, m):
+    for i in range(1, m):
+        if (a * i) % m == 1:
+            return i
+    return None
+
+def affine_decrypt(cipher, a, b):
+    a_inv = mod_inverse(a, 26)
+    if a_inv is None:
+        raise ValueError("No modular inverse for a.")
+    return ''.join(chr(((a_inv * (ord(c) - 65 - b)) % 26) + 65) if c.isalpha() else c for c in cipher.upper())
+
+def solve_affine_from_freq(cipher, c1='B', c2='U', p1='E', p2='T'):
+    # Convert letters to numbers: A=0, ..., Z=25
+    c1_val, c2_val = ord(c1) - 65, ord(c2) - 65
+    p1_val, p2_val = ord(p1) - 65, ord(p2) - 65
+
+    # Setup two equations:
+    # a*p1 + b ≡ c1 (mod 26)
+    # a*p2 + b ≡ c2 (mod 26)
+    # Subtract to eliminate b:
+    # a*(p1 - p2) ≡ (c1 - c2) (mod 26)
+    dp = (p1_val - p2_val) % 26
+    dc = (c1_val - c2_val) % 26
+
+    # Find a
+    for a in range(1, 26):
+        if gcd(a, 26) == 1 and (a * dp % 26 == dc):
+            b = (c1_val - a * p1_val) % 26
+            return a, b
+    return None, None
+
+# Example Ciphertext
+ciphertext = "BUUBBUUBBBUUBUUBUUBBBUBU"  # Replace with real ciphertext
+
+# Break the cipher
+a, b = solve_affine_from_freq(ciphertext, 'B', 'U', 'E', 'T')
+if a is not None:
+    print(f"Possible keys: a={a}, b={b}")
+    decrypted = affine_decrypt(ciphertext, a, b)
+    print("Decrypted Text:", decrypted)
+else:
+    print("Could not find valid keys.")
