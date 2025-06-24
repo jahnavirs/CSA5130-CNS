@@ -1,0 +1,26 @@
+import string
+import random
+
+def generate_key():
+    letters = list(string.ascii_uppercase)
+    shuffled = letters.copy()
+    random.shuffle(shuffled)
+    return dict(zip(letters, shuffled))
+
+def encrypt(text, key):
+    text = text.upper()
+    return ''.join(key.get(c, c) for c in text)
+
+def decrypt(cipher, key):
+    rev_key = {v: k for k, v in key.items()}
+    return ''.join(rev_key.get(c, c) for c in cipher)
+
+# Example
+key = generate_key()
+plain = "HELLO WORLD"
+cipher = encrypt(plain, key)
+decrypted = decrypt(cipher, key)
+
+print("Key:", key)
+print("Encrypted:", cipher)
+print("Decrypted:", decrypted)
