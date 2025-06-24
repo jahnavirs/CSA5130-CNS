@@ -1,0 +1,16 @@
+def monoalphabetic_encrypt(plain, keyword):
+    plain = plain.lower()
+    keyword = ''.join(sorted(set(keyword), key=keyword.index))
+    alpha = 'abcdefghijklmnopqrstuvwxyz'
+    cipher_seq = keyword + ''.join(c for c in alpha if c not in keyword)
+    cipher_map = dict(zip(alpha, cipher_seq))
+    return ''.join(cipher_map.get(c, c) for c in plain)
+
+# Example usage
+keyword = "CIPHER"
+plaintext = "we are discovered"
+ciphertext = monoalphabetic_encrypt(plaintext, keyword)
+
+print("Keyword:", keyword)
+print("Plaintext:", plaintext)
+print("Ciphertext:", ciphertext)
