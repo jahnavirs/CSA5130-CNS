@@ -1,0 +1,27 @@
+from collections import Counter
+
+cipher = """53‡‡†305))6*;4826)4‡.)4‡);806*;48†8¶60))85;;]8*;:‡*8†83 
+(88)5*†;46(;88*96*?;8)*‡(;485);5*†2:*‡(;4956*2(5*—4)8¶8* 
+;4069285);)6†8)4‡‡;1(‡9;48081;8:8‡1;48†85;4)485†528806*81 (‡9;48;(88;4(‡?34;48)4‡;161;:188;‡?;"""
+
+# Step 1: Frequency analysis
+cipher = cipher.replace('\n', '').replace(' ', '')
+freq = Counter(cipher)
+print("Character Frequencies:", freq.most_common())
+
+# Step 2: Start mapping based on likely matches
+# Hypothesize common symbols
+# Example guesses from observation (can change based on output):
+# '‡' -> 'e', '8' -> 't', '*' -> 'h', '5' -> 'o', ')' -> 'u', ';' -> 'n', '4' -> 's', '6' -> 'r', '3' -> 'd', '0' -> 'm'
+
+sub_map = {
+    '‡': 'e', '8': 't', '*': 'h', '5': 'o', ')': 'u',
+    ';': 'n', '4': 's', '6': 'r', '3': 'd', '0': 'm',
+    '†': 'c', '2': 'l', '(': 'b', '9': 'y', '1': 'f',
+    ':': 'i', '.': 'a', '¶': 'g', ',': 'p', '?': 'v',
+    ']': 'w', '—': 'x'
+}
+
+# Step 3: Decrypt using map
+plaintext = ''.join(sub_map.get(c, c) for c in cipher)
+print("\nDecrypted Message:\n", plaintext)
