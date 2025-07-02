@@ -1,0 +1,30 @@
+from Crypto.Cipher import DES3
+from Crypto.Util.Padding import pad
+from Crypto.Random import get_random_bytes
+import base64
+
+def encrypt_cbc_3des(plaintext, key):
+    # Ensure key is 24 bytes (for 3DES)
+    if len(key) != 24:
+        raise ValueError("Key must be 24 bytes for 3DES.")
+    
+    # Convert plaintext to bytes and pad
+    data = pad(plaintext.encode(), DES3.block_size)
+
+    # Generate random 8-byte IV
+    iv = get_random_bytes(8)
+
+    # Create CBC cipher
+    cipher = DES3.new(key, DES3.MODE_CBC, iv)
+
+    # Encrypt data
+    ciphertext = cipher.encrypt(data)
+
+    # Return IV + ciphertext in base64
+    return base64.b64encode(iv + ciphertext).decode()
+
+# Example usage
+key = b'Sixteen byte key!!!123456'  # 24-byte key
+plaintext = "HELLO CBC MODE"
+encrypted = encrypt_cbc_3des(plaintext, key)
+print("Encrypted (base64):", encrypted)
