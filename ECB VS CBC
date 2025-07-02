@@ -1,0 +1,49 @@
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Random import get_random_bytes
+
+# ECB and CBC mode encryption
+def encrypt_ecb_cbc(plaintext, key, iv):
+    cipher_ecb = AES.new(key, AES.MODE_ECB)
+    cipher_cbc = AES.new(key, AES.MODE_CBC, iv)
+
+    pt_bytes = pad(plaintext.encode(), AES.block_size)
+
+    ct_ecb = cipher_ecb.encrypt(pt_bytes)
+    ct_cbc = cipher_cbc.encrypt(pt_bytes)
+
+    return ct_ecb, ct_cbc
+
+# Simulate transmission error in ciphertext block (flip 1 bit)
+def flip_bit(block, index):
+    block = bytearray(block)
+    block[index] ^= 0x01  # flip last bit
+    return bytes(block)
+
+# Demonstrate error propagation in ECB and CBC
+def simulate_error_propagation():
+    key = get_random_bytes(16)
+    iv = get_random_bytes(16)
+    plaintext = "THIS IS A TEST MESSAGE"  # 3 blocks after padding
+
+    ct_ecb, ct_cbc = encrypt_ecb_cbc(plaintext, key, iv)
+
+    # Flip a bit in first ciphertext block
+    ct_ecb_error = flip_bit(ct_ecb, 0)
+    ct_cbc_error = flip_bit(ct_cbc, 0)
+
+    # Decrypt
+    cipher_ecb = AES.new(key, AES.MODE_ECB)
+    cipher_cbc = AES.new(key, AES.MODE_CBC, iv)
+
+    try:
+        pt_ecb = unpad(cipher_ecb.decrypt(ct_ecb_error), AES.block_size)
+        pt_cbc = unpad(cipher_cbc.decrypt(ct_cbc_error), AES.block_size)
+    except Exception as e:
+        pt_ecb = b"Decryption error"
+        pt_cbc = b"Decryption error"
+
+    print("ECB Decryption with Error:", pt_ecb)
+    print("CBC Decryption with Error:", pt_cbc)
+
+simulate_error_propagation()
