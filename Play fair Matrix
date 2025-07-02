@@ -1,0 +1,62 @@
+# Define the Playfair matrix as a 5x5 grid
+matrix = [
+    ['M', 'F', 'H', 'I', 'K'],
+    ['U', 'N', 'O', 'P', 'Q'],
+    ['Z', 'V', 'W', 'X', 'Y'],
+    ['E', 'L', 'A', 'R', 'G'],
+    ['D', 'S', 'T', 'B', 'C']
+]
+
+# Replace J with I, remove punctuation, and prepare plaintext
+def prepare_text(text):
+    text = text.upper().replace("J", "I")
+    text = ''.join([c for c in text if c.isalpha()])
+    i = 0
+    result = ''
+    while i < len(text):
+        a = text[i]
+        b = text[i + 1] if i + 1 < len(text) else 'X'
+        if a == b:
+            result += a + 'X'
+            i += 1
+        else:
+            result += a + b
+            i += 2
+    if len(result) % 2 != 0:
+        result += 'X'
+    return result
+
+# Get position of a character in the matrix
+def get_pos(char):
+    for i in range(5):
+        for j in range(5):
+            if matrix[i][j] == char:
+                return i, j
+    return None, None
+
+# Encrypt a digraph using Playfair rules
+def encrypt_pair(a, b):
+    row1, col1 = get_pos(a)
+    row2, col2 = get_pos(b)
+    
+    if row1 == row2:
+        return matrix[row1][(col1 + 1) % 5] + matrix[row2][(col2 + 1) % 5]
+    elif col1 == col2:
+        return matrix[(row1 + 1) % 5][col1] + matrix[(row2 + 1) % 5][col2]
+    else:
+        return matrix[row1][col2] + matrix[row2][col1]
+
+# Encrypt the entire message
+def playfair_encrypt(text):
+    prepared = prepare_text(text)
+    ciphertext = ''
+    for i in range(0, len(prepared), 2):
+        ciphertext += encrypt_pair(prepared[i], prepared[i+1])
+    return ciphertext
+
+# Message to encrypt
+plaintext = "Must see you over Cadogan West. Coming at once."
+ciphertext = playfair_encrypt(plaintext)
+
+# Output
+print("Ciphertext:", ciphertext)
