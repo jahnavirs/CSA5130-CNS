@@ -1,0 +1,37 @@
+from collections import Counter
+
+# English letter frequency (approximate)
+english_freq_order = 'ETAOINSHRDLCUMWFGYPBVKJXQZ'
+
+def score_text(text):
+    # Score by how frequent letters match English pattern
+    letter_counts = Counter(text.upper())
+    most_common = [item[0] for item in letter_counts.most_common(6)]
+    return sum(english_freq_order.index(ch) if ch in english_freq_order else 26 for ch in most_common)
+
+def decrypt_caesar(ciphertext, key):
+    decrypted = ''
+    for char in ciphertext:
+        if char.isalpha():
+            offset = ord('A') if char.isupper() else ord('a')
+            decrypted += chr((ord(char) - offset - key) % 26 + offset)
+        else:
+            decrypted += char
+    return decrypted
+
+def frequency_attack(ciphertext, top_n=5):
+    possibilities = []
+    for key in range(26):
+        plaintext = decrypt_caesar(ciphertext, key)
+        score = score_text(plaintext)
+        possibilities.append((score, key, plaintext))
+    
+    # Sort by score (lower is better since index of ETAOIN... is used)
+    possibilities.sort()
+    print(f"\nTop {top_n} possible plaintexts:\n")
+    for score, key, plaintext in possibilities[:top_n]:
+        print(f"Key = {key:2}: {plaintext}")
+
+# === Example usage ===
+cipher = "Wklv lv d whvw phvvdjh"  # Encrypted "This is a test message" with key = 3
+frequency_attack(cipher, top_n=10)
