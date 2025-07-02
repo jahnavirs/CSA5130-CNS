@@ -1,0 +1,15 @@
+import math
+
+def playfair_key_space():
+    # Total number of permutations of 25 letters
+    total_keys = math.factorial(25)
+    
+    # Convert total_keys to log base 2 to express it as power of 2
+    log2_keys = math.log2(total_keys)
+    
+    # Round to nearest integer for approximation
+    approx_power = round(log2_keys)
+
+    print(f"Number of possible Playfair cipher keys ≈ 2^{approx_power}")
+
+playfair_key_space()
