@@ -1,0 +1,32 @@
+import numpy as np
+from sympy import Matrix
+
+def mod_inverse_matrix(matrix, modulus):
+    """Find modular inverse of a matrix under given modulus."""
+    sympy_matrix = Matrix(matrix)
+    try:
+        inv_matrix = sympy_matrix.inv_mod(modulus)
+        return np.array(inv_matrix).astype(int)
+    except:
+        return None
+
+def recover_hill_key(plaintext_vectors, ciphertext_vectors):
+    P = np.array(plaintext_vectors).T  # plaintext matrix
+    C = np.array(ciphertext_vectors).T  # ciphertext matrix
+
+    P_inv = mod_inverse_matrix(P, 26)
+    if P_inv is None:
+        print("Plaintext matrix not invertible mod 26.")
+        return None
+
+    K = np.dot(C, P_inv) % 26
+    return K
+
+# Example input (A=0, B=1, ..., Z=25)
+plaintext_vectors = [[0, 2],  # 'AC'
+                     [19, 7]] # 'TH'
+ciphertext_vectors = [[7, 14],  # 'HO'
+                      [17, 0]]  # 'RA'
+
+key_matrix = recover_hill_key(plaintext_vectors, ciphertext_vectors)
+print("Recovered Key Matrix:\n", key_matrix)
