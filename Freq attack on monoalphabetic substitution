@@ -1,0 +1,34 @@
+from collections import Counter
+import string
+
+# Standard English letter frequency (most to least frequent)
+english_freq_order = 'ETAOINSHRDLCUMWFGYPBVKJXQZ'
+
+def letter_frequency_attack(ciphertext, top_n=10):
+    ciphertext = ''.join(filter(str.isalpha, ciphertext.upper()))
+    
+    # Frequency of letters in ciphertext
+    freq = Counter(ciphertext)
+    most_common = [item[0] for item in freq.most_common()]
+    
+    # Create mappings of ciphertext letter to English frequency letters
+    mappings = []
+    for i in range(top_n):
+        shift = i % len(english_freq_order)
+        mapping = dict(zip(most_common, english_freq_order[shift:] + english_freq_order[:shift]))
+        mappings.append(mapping)
+    
+    # Generate possible plaintexts
+    plaintexts = []
+    for mapping in mappings:
+        plaintext = ''.join(mapping.get(c, c) for c in ciphertext)
+        plaintexts.append(plaintext)
+    
+    return plaintexts
+
+# Example usage:
+cipher = input("Enter ciphertext: ")
+results = letter_frequency_attack(cipher, top_n=10)
+print("\nTop 10 possible plaintexts:")
+for i, result in enumerate(results, 1):
+    print(f"{i}. {result}")
