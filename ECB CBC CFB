@@ -1,0 +1,43 @@
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+import math
+
+# Padding: 1-bit followed by 0s to fit block size
+def custom_pad(data, block_size):
+    pad_len = block_size - (len(data) % block_size)
+    if pad_len == 0:
+        pad_len = block_size
+    return data + b'\x80' + b'\x00' * (pad_len - 1)
+
+# ECB Mode Encryption
+def encrypt_ecb(key, data):
+    cipher = AES.new(key, AES.MODE_ECB)
+    return cipher.encrypt(data)
+
+# CBC Mode Encryption
+def encrypt_cbc(key, data, iv):
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    return cipher.encrypt(data)
+
+# CFB Mode Encryption
+def encrypt_cfb(key, data, iv):
+    cipher = AES.new(key, AES.MODE_CFB, iv, segment_size=128)
+    return cipher.encrypt(data)
+
+# Input
+plaintext = b"HelloSecureWorld"  # 16 bytes
+key = get_random_bytes(16)      # 16 bytes AES key
+iv = get_random_bytes(16)       # IV for CBC and CFB
+
+# Pad plaintext
+padded = custom_pad(plaintext, 16)
+
+# Encrypt
+ecb_ct = encrypt_ecb(key, padded)
+cbc_ct = encrypt_cbc(key, padded, iv)
+cfb_ct = encrypt_cfb(key, padded, iv)
+
+# Output
+print("ECB Ciphertext:", ecb_ct.hex())
+print("CBC Ciphertext:", cbc_ct.hex())
+print("CFB Ciphertext:", cfb_ct.hex())
