@@ -1,0 +1,56 @@
+import string
+
+def prepare_key(key):
+    key = key.upper().replace("J", "I")
+    result = []
+    for char in key:
+        if char not in result and char in string.ascii_uppercase:
+            result.append(char)
+    for char in string.ascii_uppercase:
+        if char == 'J':  # Playfair typically merges I and J
+            continue
+        if char not in result:
+            result.append(char)
+    return [result[i:i + 5] for i in range(0, 25, 5)]
+
+def find_position(matrix, char):
+    for i in range(5):
+        for j in range(5):
+            if matrix[i][j] == char:
+                return i, j
+    return None
+
+def decrypt_pair(a, b, matrix):
+    row1, col1 = find_position(matrix, a)
+    row2, col2 = find_position(matrix, b)
+
+    if row1 == row2:  # Same row
+        return matrix[row1][(col1 - 1) % 5] + matrix[row2][(col2 - 1) % 5]
+    elif col1 == col2:  # Same column
+        return matrix[(row1 - 1) % 5][col1] + matrix[(row2 - 1) % 5][col2]
+    else:  # Rectangle
+        return matrix[row1][col2] + matrix[row2][col1]
+
+def decrypt_playfair(ciphertext, key):
+    matrix = prepare_key(key)
+    ciphertext = ciphertext.upper().replace(" ", "")
+    plaintext = ""
+
+    for i in range(0, len(ciphertext), 2):
+        a = ciphertext[i]
+        b = ciphertext[i + 1]
+        plaintext += decrypt_pair(a, b, matrix)
+
+    return plaintext
+
+# Input Ciphertext
+cipher_text = """KXJEY UREBE ZWEHE WRYTU HEYFS 
+KREHE GOYFI WTTTU OLKSY CAJPO 
+BOTEI ZONTX BYBNT GONEY CUZWR 
+GDSON SXBOU YWRHE BAAHY USEDQ""".replace("\n", " ")
+
+# Decrypt the message
+key = "MONARCHY"
+decrypted = decrypt_playfair(cipher_text, key)
+
+print("Decrypted Message:\n", decrypted)
