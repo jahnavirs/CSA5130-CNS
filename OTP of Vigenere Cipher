@@ -1,0 +1,21 @@
+import random
+
+def one_time_pad_encrypt(plaintext):
+    plaintext = plaintext.upper().replace(" ", "")
+    key = [random.randint(0, 25) for _ in plaintext]
+    ciphertext = ''
+
+    for i, char in enumerate(plaintext):
+        shift = key[i]
+        encrypted_char = chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
+        ciphertext += encrypted_char
+
+    return ciphertext, key
+
+# Example usage
+plaintext = "HELLO"
+ciphertext, key = one_time_pad_encrypt(plaintext)
+
+print("Plaintext :", plaintext)
+print("Key       :", key)
+print("Ciphertext:", ciphertext)
