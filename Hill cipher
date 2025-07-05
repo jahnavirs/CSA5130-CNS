@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Modular inverse helper
+int mod_inverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++)
+        if ((a * x) % m == 1)
+            return x;
+    return -1;
+}
+
+// Matrix multiplication (2x2 * 2x1)
+void encrypt(int key[2][2], int pt[2], int ct[2]) {
+    for (int i = 0; i < 2; i++) {
+        ct[i] = 0;
+        for (int j = 0; j < 2; j++)
+            ct[i] += key[i][j] * pt[j];
+        ct[i] %= 26;
+    }
+}
+
+// Matrix inverse mod 26 (2x2)
+int matrix_inverse(int m[2][2], int inv[2][2]) {
+    int det = (m[0][0]*m[1][1] - m[0][1]*m[1][0]) % 26;
+    if (det < 0) det += 26;
+    int det_inv = mod_inverse(det, 26);
+    if (det_inv == -1) return 0;
+
+    inv[0][0] =  (m[1][1] * det_inv) % 26;
+    inv[0][1] = (-m[0][1] * det_inv + 26) % 26;
+    inv[1][0] = (-m[1][0] * det_inv + 26) % 26;
+    inv[1][1] =  (m[0][0] * det_inv) % 26;
+    return 1;
+}
+
+void decrypt(int key[2][2], int ct[2], int pt[2]) {
+    int inv[2][2];
+    if (!matrix_inverse(key, inv)) {
+        printf("Matrix not invertible\n");
+        exit(1);
+    }
+    encrypt(inv, ct, pt);
+}
+
+void print_text(int arr[2]) {
+    for (int i = 0; i < 2; i++)
+        printf("%c", arr[i] + 'A');
+    printf("\n");
+}
+
+int main() {
+    int key[2][2] = {{3, 3}, {2, 5}};  // Example Hill cipher key matrix
+    char input[3];
+    int pt[2], ct[2], decrypted[2];
+
+    printf("Enter 2-letter plaintext (A-Z): ");
+    scanf("%2s", input);
+    pt[0] = input[0] - 'A';
+    pt[1] = input[1] - 'A';
+
+    encrypt(key, pt, ct);
+    printf("Encrypted: ");
+    print_text(ct);
+
+    decrypt(key, ct, decrypted);
+    printf("Decrypted: ");
+    print_text(decrypted);
+
+    return 0;
+}
