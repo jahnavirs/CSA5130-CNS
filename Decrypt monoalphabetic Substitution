@@ -1,0 +1,54 @@
+from collections import Counter
+import itertools
+
+# English frequency (descending order)
+ENGLISH_FREQ_ORDER = 'ETAOINSHRDLCUMWFGYPBVKJXQZ'
+
+# Count frequencies of letters in the ciphertext
+def get_letter_frequencies(text):
+    filtered = [c.upper() for c in text if c.isalpha()]
+    return Counter(filtered)
+
+# Map based on frequency match
+def build_frequency_map(cipher_freq, english_freq):
+    mapping = {}
+    for c, e in zip(cipher_freq, english_freq):
+        mapping[c] = e
+    return mapping
+
+# Apply substitution map
+def apply_mapping(text, mapping):
+    result = ''
+    for char in text:
+        if char.upper() in mapping:
+            mapped = mapping[char.upper()]
+            result += mapped.lower() if char.islower() else mapped
+        else:
+            result += char
+    return result
+
+# Generate top N possible plaintexts
+def generate_candidates(ciphertext, top_n=5):
+    letter_freqs = get_letter_frequencies(ciphertext)
+    most_common_letters = [pair[0] for pair in letter_freqs.most_common()]
+    
+    # Try permutations of top N frequent letters
+    attempts = []
+    for perm in itertools.permutations(ENGLISH_FREQ_ORDER[:len(most_common_letters)]):
+        freq_map = build_frequency_map(most_common_letters, perm)
+        plaintext = apply_mapping(ciphertext, freq_map)
+        attempts.append(plaintext)
+        if len(attempts) >= top_n:
+            break
+    return attempts
+
+# --- Example usage ---
+if __name__ == "__main__":
+    ciphertext = input("Enter monoalphabetic cipher text: ")
+    top_n = int(input("How many top results do you want? (e.g., 10): "))
+
+    candidates = generate_candidates(ciphertext, top_n)
+
+    print("\nTop possible plaintexts:")
+    for i, candidate in enumerate(candidates, 1):
+        print(f"\nOption {i}:\n{candidate}")
