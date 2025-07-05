@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#define MAX_LEN 1024
+#define ALPHABET_SIZE 26
+
+// English letter frequency in descending order (simplified)
+char english_order[] = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
+
+// Frequency score of a decrypted text
+int score_text(const char *text) {
+    int freq[ALPHABET_SIZE] = {0};
+    int total = 0;
+
+    for (int i = 0; text[i]; i++) {
+        if (isalpha(text[i])) {
+            freq[toupper(text[i]) - 'A']++;
+            total++;
+        }
+    }
+
+    int score = 0;
+    for (int i = 0; i < 6; i++) { // focus on top 6 frequent letters
+        score += freq[english_order[i] - 'A'];
+    }
+    return score;
+}
+
+// Caesar decryption with given key
+void decrypt_caesar(const char *cipher, char *output, int key) {
+    int i;
+    for (i = 0; cipher[i]; i++) {
+        char c = cipher[i];
+        if (isalpha(c)) {
+            char base = isupper(c) ? 'A' : 'a';
+            output[i] = (c - base - key + ALPHABET_SIZE) % ALPHABET_SIZE + base;
+        } else {
+            output[i] = c;
+        }
+    }
+    output[i] = '\0';
+}
+
+// Struct to hold decrypted text and its score
+typedef struct {
+    int key;
+    int score;
+    char text[MAX_LEN];
+} Candidate;
+
+// Comparator for sorting candidates by score
+int compare(const void *a, const void *b) {
+    return ((Candidate *)b)->score - ((Candidate *)a)->score;
+}
+
+// Main function
+int main() {
+    char cipher[MAX_LEN];
+    int top_n;
+
+    printf("Enter ciphertext: ");
+    fgets(cipher, MAX_LEN, stdin);
+    cipher[strcspn(cipher, "\n")] = 0;
+
+    printf("How many top results do you want? ");
+    scanf("%d", &top_n);
+
+    Candidate candidates[ALPHABET_SIZE];
+
+    for (int k = 0; k < ALPHABET_SIZE; k++) {
+        decrypt_caesar(cipher, candidates[k].text, k);
+        candidates[k].score = score_text(candidates[k].text);
+        candidates[k].key = k;
+    }
+
+    qsort(candidates, ALPHABET_SIZE, sizeof(Candidate), compare);
+
+    printf("\nTop %d possible plaintexts:\n", top_n);
+    for (int i = 0; i < top_n && i < ALPHABET_SIZE; i++) {
+        printf("\nOption %d (Key = %d):\n%s\n", i + 1, candidates[i].key, candidates[i].text);
+    }
+
+    return 0;
+}
