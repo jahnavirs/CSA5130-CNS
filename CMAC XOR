@@ -1,0 +1,38 @@
+from Crypto.Cipher import AES
+
+def left_shift_128(bitstring):
+    shifted = int.from_bytes(bitstring, 'big') << 1
+    shifted &= (1 << 128) - 1  # keep only 128 bits
+    return shifted.to_bytes(16, 'big')
+
+def xor_r(constant, key):
+    rb = 0x87
+    last_byte = key[-1] ^ rb
+    return key[:-1] + bytes([last_byte])
+
+def generate_cmac_subkeys(key):
+    cipher = AES.new(key, AES.MODE_ECB)
+    zero_block = b'\x00' * 16
+    L = cipher.encrypt(zero_block)
+
+    # Generate K1
+    if (L[0] & 0x80) == 0:
+        K1 = left_shift_128(L)
+    else:
+        K1 = xor_r(0x87, left_shift_128(L))
+
+    # Generate K2
+    if (K1[0] & 0x80) == 0:
+        K2 = left_shift_128(K1)
+    else:
+        K2 = xor_r(0x87, left_shift_128(K1))
+
+    return K1, K2
+
+# Example Input
+key = b'\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x15\x88\x09\xcf\x4f\x3c'
+
+# Output
+K1, K2 = generate_cmac_subkeys(key)
+print("Subkey 1:", K1.hex())
+print("Subkey 2:", K2.hex())
