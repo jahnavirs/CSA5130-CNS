@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+#define MAX_LEN 1024
+#define ALPHABET_SIZE 26
+#define MAX_CANDIDATES 100
+
+// English letter frequency in descending order
+const char english_freq[] = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
+
+// Struct for candidate plaintexts
+typedef struct {
+    char plaintext[MAX_LEN];
+    int score;
+} Candidate;
+
+// Frequency scoring function
+int score_text(const char *text) {
+    int freq[ALPHABET_SIZE] = {0};
+    int score = 0;
+    for (int i = 0; text[i]; i++) {
+        if (isalpha(text[i])) {
+            freq[toupper(text[i]) - 'A']++;
+        }
+    }
+    // Score based on presence of most common English letters
+    for (int i = 0; i < 6; i++) { // Only top 6 for simplicity
+        score += freq[english_freq[i] - 'A'];
+    }
+    return score;
+}
+
+// Frequency analysis on ciphertext
+void analyze_frequency(const char *ciphertext, char *sorted_letters) {
+    int freq[ALPHABET_SIZE] = {0};
+    for (int i = 0; ciphertext[i]; i++) {
+        if (isalpha(ciphertext[i])) {
+            freq[toupper(ciphertext[i]) - 'A']++;
+        }
+    }
+
+    // Sort letters by frequency
+    int used[ALPHABET_SIZE] = {0};
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        int max = -1, max_index = -1;
+        for (int j = 0; j < ALPHABET_SIZE; j++) {
+            if (!used[j] && freq[j] > max) {
+                max = freq[j];
+                max_index = j;
+            }
+        }
+        sorted_letters[i] = 'A' + max_index;
+        used[max_index] = 1;
+    }
+}
+
+// Build a mapping from ciphertext to guessed plaintext letters
+void build_mapping(const char *cipher_freq, const char *guess_freq, char map[26]) {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        map[cipher_freq[i] - 'A'] = guess_freq[i];
+    }
+}
+
+// Decrypt using a given mapping
+void decrypt_with_map(const char *ciphertext, const char map[26], char *output) {
+    for (int i = 0; ciphertext[i]; i++) {
+        char c = ciphertext[i];
+        if (isalpha(c)) {
+            char upper = toupper(c);
+            char mapped = map[upper - 'A'];
+            output[i] = isupper(c) ? mapped : tolower(mapped);
+        } else {
+            output[i] = c;
+        }
+    }
+    output[strlen(ciphertext)] = '\0';
+}
+
+// Comparator for qsort
+int compare_candidates(const void *a, const void *b) {
+    return ((Candidate *)b)->score - ((Candidate *)a)->score;
+}
+
+int main() {
+    char ciphertext[MAX_LEN];
+    char cipher_freq[ALPHABET_SIZE];
+    int top_n;
+
+    printf("Enter the ciphertext:\n");
+    fgets(ciphertext, MAX_LEN, stdin);
+    ciphertext[strcspn(ciphertext, "\n")] = 0;
+
+    printf("Enter number of top plaintexts to display: ");
+    scanf("%d", &top_n);
+
+    // Analyze ciphertext frequency
+    analyze_frequency(ciphertext, cipher_freq);
+
+    Candidate candidates[MAX_CANDIDATES];
+    int candidate_count = 0;
+
+    // Try permutations of top English frequency letters
+    for (int i = 0; i < 10 && candidate_count < top_n; i++) {
+        char guess_freq[ALPHABET_SIZE];
+        strcpy(guess_freq, english_freq);
+
+        // Swap a few letters to try different guesses
+        if (i > 0 && i < ALPHABET_SIZE) {
+            char temp = guess_freq[0];
+            guess_freq[0] = guess_freq[i];
+            guess_freq[i] = temp;
+        }
+
+        char map[26];
+        build_mapping(cipher_freq, guess_freq, map);
+
+        decrypt_with_map(ciphertext, map, candidates[candidate_count].plaintext);
+        candidates[candidate_count].score = score_text(candidates[candidate_count].plaintext);
+        candidate_count++;
+    }
+
+    // Sort by score
+    qsort(candidates, candidate_count, sizeof(Candidate), compare_candidates);
+
+    // Output top results
+    printf("\nTop %d possible plaintexts:\n", top_n);
+    for (int i = 0; i < top_n && i < candidate_count; i++) {
+        printf("\nOption %d:\n%s\n", i + 1, candidates[i].plaintext);
+    }
+
+    return 0;
+}
