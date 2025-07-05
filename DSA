@@ -1,0 +1,35 @@
+from Crypto.PublicKey import DSA
+from Crypto.Signature import DSS
+from Crypto.Hash import SHA256
+from Crypto.Random import get_random_bytes
+
+# Key generation
+key = DSA.generate(1024)
+
+# Message to sign
+message = b'This is a secure message.'
+
+# Hash the message
+hash_obj1 = SHA256.new(message)
+hash_obj2 = SHA256.new(message)
+
+# Sign twice (different k internally)
+signer1 = DSS.new(key, 'fips-186-3')
+signer2 = DSS.new(key, 'fips-186-3')
+
+signature1 = signer1.sign(hash_obj1)
+signature2 = signer2.sign(hash_obj2)
+
+# Output
+print("Signature 1:", signature1.hex())
+print("Signature 2:", signature2.hex())
+
+# Verification
+verifier = DSS.new(key.publickey(), 'fips-186-3')
+try:
+    verifier.verify(SHA256.new(message), signature1)
+    print("Signature 1 is valid.")
+    verifier.verify(SHA256.new(message), signature2)
+    print("Signature 2 is valid.")
+except ValueError:
+    print("Signature verification failed.")
