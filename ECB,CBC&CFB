@@ -1,0 +1,57 @@
+from Crypto.Cipher import DES
+from Crypto.Random import get_random_bytes
+
+# Block size for DES (64 bits = 8 bytes)
+BLOCK_SIZE = 8
+
+# Custom padding: 1-bit (0x80) + 0-bits (0x00)
+def custom_pad(data):
+    padding_required = BLOCK_SIZE - (len(data) % BLOCK_SIZE)
+    return data + bytes([0x80] + [0x00] * (padding_required - 1))
+
+def custom_unpad(data):
+    try:
+        index = data.rindex(0x80)
+        return data[:index]
+    except ValueError:
+        return data  # padding not found
+
+# Encrypt and decrypt using different modes
+def encrypt_decrypt_modes(plaintext):
+    key = b'12345678'  # 8-byte DES key
+    iv = get_random_bytes(8)
+
+    # Apply custom padding
+    padded = custom_pad(plaintext)
+
+    # ECB Mode
+    ecb_cipher = DES.new(key, DES.MODE_ECB)
+    ecb_encrypted = ecb_cipher.encrypt(padded)
+    ecb_decrypted = custom_unpad(ecb_cipher.decrypt(ecb_encrypted))
+
+    # CBC Mode
+    cbc_cipher = DES.new(key, DES.MODE_CBC, iv)
+    cbc_encrypted = cbc_cipher.encrypt(padded)
+    cbc_decrypt_cipher = DES.new(key, DES.MODE_CBC, iv)
+    cbc_decrypted = custom_unpad(cbc_decrypt_cipher.decrypt(cbc_encrypted))
+
+    # CFB Mode (segment size = 8 bytes)
+    cfb_cipher = DES.new(key, DES.MODE_CFB, iv, segment_size=64)
+    cfb_encrypted = cfb_cipher.encrypt(padded)
+    cfb_decrypt_cipher = DES.new(key, DES.MODE_CFB, iv, segment_size=64)
+    cfb_decrypted = custom_unpad(cfb_decrypt_cipher.decrypt(cfb_encrypted))
+
+    return {
+        'ECB': (ecb_encrypted.hex(), ecb_decrypted),
+        'CBC': (cbc_encrypted.hex(), cbc_decrypted),
+        'CFB': (cfb_encrypted.hex(), cfb_decrypted)
+    }
+
+# Example usage
+plaintext = b'HelloWorld!!'  # 12 bytes
+results = encrypt_decrypt_modes(plaintext)
+
+print("Original     :", plaintext)
+for mode in results:
+    print(f"{mode} Encrypted :", results[mode][0])
+    print(f"{mode} Decrypted :", results[mode][1])
